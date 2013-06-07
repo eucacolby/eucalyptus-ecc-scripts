@@ -1,0 +1,75 @@
+#!/bin/bash
+
+#
+# Nominally check that we're given 3 arguments
+#
+if [ $# -ne 3 ]; then
+   echo  "Usage:"
+   echo  "$(basename $0) <account name> <email address> <password>"
+   echo
+   exit 1
+fi
+
+#
+# Make sure all arguments are url encode. This is needed later on
+# when we post to the Marketo page
+#
+export companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
+export emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
+export password=$3
+
+#
+# Tell the ECC frontend about the account we want to create
+# It then checks for two error conditions
+#     1) "Error" -- Says the account was already created, or some other error.
+#     2) ssh_exchange... -- Is probably because you aren't connected by VPN
+#
+ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | grep 'Error|ssh_exchange_identification'
+
+if [ $? = 0 ]; then
+   echo
+   echo Error creating account. Halting process.
+   echo
+   exit 1
+fi
+
+# -----DANGER-----DANGER-----DANGER-----DANGER-----DANGER-----
+#
+# Assuming account was created. 
+# Something could have gone wrong though
+#
+echo -n "Account created. Time to download then post the credentials."
+
+#
+# Get the download URL of User Credentials (.zip)
+#
+echo
+echo -n "User Credentials URL : "
+read credURL
+export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$credURL')")
+
+dataString="mktForm_28=mktForm_28"
+dataString="$dataString&""Company=$companyName"
+dataString="$dataString&""Email=$emailAddress"
+dataString="$dataString&""ECC_Credential_URL__c=$downloadURL"
+dataString="$dataString&""ECC_Account_Created__c=Yes"
+dataString="$dataString&""mktFrmSubmit=Submit"
+dataString="$dataString&""lpId=3544"
+dataString="$dataString&""subId=198"
+dataString="$dataString&""munchkinId=729-HPK-685"
+dataString="$dataString&""lpurl=http%3A%2F%2Fgo.eucalyptus.com/ECC-acct-crtd-conf-frm.html?cr={creative}&kw={keyword}"
+dataString="$dataString&""formid=28"
+dataString="$dataString&""returnURL=http%3A%2F%2Fgo.eucalyptus.com/ECC-acct-crtd-thnks.html"
+dataString="$dataString&""retURL=http%3A%2F%2Fgo.eucalyptus.com/ECC-acct-crtd-thnks.html"
+dataString="$dataString&""returnLPId=3545"
+dataString="$dataString&""_mkt_dis=preturn"
+dataString="$dataString&""_mkt_trk=id%3A729-HPK-685%26token%3A_mch-eucalyptus.com-1337352304864-57097"
+
+#
+# Tell Marketo that you've created the account
+#
+echo
+echo Notifying user....
+echo
+curl --data "$dataString"  http://go.eucalyptus.com/index.php/leadCapture/save
+echo
