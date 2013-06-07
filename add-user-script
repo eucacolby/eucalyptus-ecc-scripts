@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# THIS MUST RUN ON THE EUCALYPTUS SERVER
+#
+#
+#
+# $1 = account $2 = email $3 = password $4 = hashstring
+#
+CREDENITAL_BASE_LOCATION='/usr/share/eucalyptus-console/static/help/creds/'
+
+euare-accountcreate -a $1 || { echo "Error creating account: $?"; exit; }
+euare-usermodloginprofile --delegate $1 -u admin -p $3 || { echo "Error setting password: $?"; exit; }
+euare-userupdateinfo --delegate=$1 -u admin -k email -i $2 || { echo "Error setting email: $?"; exit; }
+
+# Now confirm output
+euare-usergetinfo -u admin --delegate $1
+euare-usergetattributes -u admin --delegate $1 --show-extra
+
+#
+# ---------  FUTURE USE  ---------
+# When we can finally grab credentials zip from command line
+# the following code should be TESTED, then enabled.
+#
+#
+# euca-get-credentials --delegate $1 $CREDENITAL_BASE_LOCATION/$4$1.zip || { echo "Error creating or posting credentials: $?"; exit; }
+#

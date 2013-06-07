@@ -24,7 +24,7 @@ export password=$3
 #     1) "Error" -- Says the account was already created, or some other error.
 #     2) ssh_exchange... -- Is probably because you aren't connected by VPN
 #
-ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | grep 'Error|ssh_exchange_identification'
+ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | egrep 'Error|ssh_exchange_identification'
 
 if [ $? = 0 ]; then
    echo
