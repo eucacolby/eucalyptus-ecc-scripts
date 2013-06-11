@@ -24,7 +24,7 @@ export password=$3
 #     1) "Error" -- Says the account was already created, or some other error.
 #     2) ssh_exchange... -- Is probably because you aren't connected by VPN
 #
-ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | egrep 'Error|ssh_exchange_identification'
+ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
 
 if [ $? = 0 ]; then
    echo
@@ -38,7 +38,25 @@ fi
 # Assuming account was created. 
 # Something could have gone wrong though
 #
-echo -n "Account created. Time to download then post the credentials."
+DROPBOX_DIR=/Users/cdyess/Dropbox/ECC_Credentials
+ORIGINAL_ZIP=/Users/cdyess/Downloads/euca2-admin-x509.zip
+if [ -e $ORIGINAL_ZIP ]; then
+   rm -f $ORIGINAL_ZIP
+fi
+
+echo "Account created. Time to download then post the credentials."
+echo -n "Hit enter when zip file has been downloaded:"
+read junk
+echo
+
+mv $ORIGINAL_ZIP $DROPBOX_DIR/$1.zip
+
+#if [ $? = 0 ]; then
+#   echo
+#   echo Error renaming and moving the credentials file. You'll need to handle this manually. 
+#   echo
+#fi
+
 
 #
 # Get the download URL of User Credentials (.zip)
