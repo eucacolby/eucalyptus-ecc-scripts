@@ -68,6 +68,7 @@ export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$
 
 dataString="mktForm_28=mktForm_28"
 dataString="$dataString&""Company=$companyName"
+dataString="$dataString&""ECC_Account_Name__c=$companyName"
 dataString="$dataString&""Email=$emailAddress"
 dataString="$dataString&""ECC_Credential_URL__c=$downloadURL"
 dataString="$dataString&""ECC_Account_Created__c=Yes"
