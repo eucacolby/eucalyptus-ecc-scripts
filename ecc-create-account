@@ -11,12 +11,27 @@ if [ $# -ne 3 ]; then
 fi
 
 #
+# Now create / get a random string that we'll use
+# when naming the new user's credential (.zip) file
+# and another string that we can use for auto-generated
+# passwords.
+#
+# NOTE: would have used local random generator, but it required
+#       sudo which kinda gets in the way.
+#
+RANDOM_STRING=`curl --silent "http://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new"`
+GENERATED_PASSWORD=`echo $RANDOM_STRING | cut -c1-8`
+GENERATED_PREFIX=`echo $RANDOM_STRING | cut -c9-16`
+CRED_DOWNLOAD_URL=https://communitycloud.eucalyptus.com:8888/help/creds/$GENERATED_PREFIX$1.zip
+
+#
 # Make sure all arguments are url encode. This is needed later on
 # when we post to the Marketo page
 #
 export companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
 export emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
 export password=$3
+export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$CRED_DOWNLOAD_URL')")
 
 #
 # Tell the ECC frontend about the account we want to create
@@ -24,7 +39,7 @@ export password=$3
 #     1) "Error" -- Says the account was already created, or some other error.
 #     2) ssh_exchange... -- Is probably because you aren't connected by VPN
 #
-ssh root@communitycloud.eucalyptus.com /root/gdk-add-user-script.sh \"$1\" \"$2\" \"$3\" 2>&1 | egrep 'Error|ssh_exchange_identification'
+ssh root@communitycloud.eucalyptus.com /root/ecc-admin-scripts/add-user-script \"$1\" \"$2\" \"$3\" \"$GENERATED_PREFIX\" 2>&1 | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
 
 if [ $? = 0 ]; then
    echo
@@ -33,21 +48,9 @@ if [ $? = 0 ]; then
    exit 1
 fi
 
-# -----DANGER-----DANGER-----DANGER-----DANGER-----DANGER-----
 #
-# Assuming account was created. 
-# Something could have gone wrong though
+# Build the URL used to call Marketo for this new account
 #
-echo -n "Account created. Time to download then post the credentials."
-
-#
-# Get the download URL of User Credentials (.zip)
-#
-echo
-echo -n "User Credentials URL : "
-read credURL
-export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$credURL')")
-
 dataString="mktForm_28=mktForm_28"
 dataString="$dataString&""ECC_Account_Name__c=$companyName"
 dataString="$dataString&""Email=$emailAddress"
