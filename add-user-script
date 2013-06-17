@@ -6,21 +6,26 @@
 #
 # $1 = account $2 = email $3 = password $4 = hashstring
 #
+
 CREDENITAL_BASE_LOCATION='/usr/share/eucalyptus-console/static/help/creds/'
 
+if [ $# -ne 4 ]
+  then
+    echo "Error: Unexpected number of parmeters"
+    exit 1
+fi
+
+
 euare-accountcreate -a $1 || { echo "Error creating account: $?"; exit; }
-euare-usermodloginprofile --delegate $1 -u admin -p $3 || { echo "Error setting password: $?"; exit; }
-euare-userupdateinfo --delegate=$1 -u admin -k email -i $2 || { echo "Error setting email: $?"; exit; }
+euare-usermodloginprofile --as-account $1 -u admin -p $3 || { echo "Error setting password: $?"; exit; }
+euare-userupdateinfo --as-account=$1 -u admin -k email -i $2 || { echo "Error setting email: $?"; exit; }
 
 # Now confirm output
-euare-usergetinfo -u admin --delegate $1
-euare-usergetattributes -u admin --delegate $1 --show-extra
+euare-usergetinfo -u admin --as-account $1
+euare-usergetattributes -u admin --as-account $1 --show-extra
 
 #
-# ---------  FUTURE USE  ---------
-# When we can finally grab credentials zip from command line
-# the following code should be TESTED, then enabled.
+# Download the user's credentials (.zip) file and store it
+# somewhere they can download it from easily.
 #
-#
-# euca-get-credentials --delegate $1 $CREDENITAL_BASE_LOCATION/$4$1.zip || { echo "Error creating or posting credentials: $?"; exit; }
-#
+euca-get-credentials -a $1 $CREDENITAL_BASE_LOCATION/$4$1.zip || { echo "Error creating or posting credentials: $?"; exit; }
