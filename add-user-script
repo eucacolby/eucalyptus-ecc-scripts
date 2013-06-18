@@ -19,6 +19,8 @@ fi
 euare-accountcreate -a $1 || { echo "Error creating account: $?"; exit; }
 euare-usermodloginprofile --as-account $1 -u admin -p $3 || { echo "Error setting password: $?"; exit; }
 euare-userupdateinfo --as-account=$1 -u admin -k email -i $2 || { echo "Error setting email: $?"; exit; }
+euare-usermod -u admin --as-account $1 --pwd-expires '2023-03-02T00:00:00Z'
+
 
 # Now confirm output
 euare-usergetinfo -u admin --as-account $1
