@@ -38,9 +38,15 @@ fi
 # Make sure all arguments are url encode. This is needed later on
 # when we post to the Marketo page
 #
-export companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
-export emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
-export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$CRED_DOWNLOAD_URL')")
+companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
+emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
+downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$CRED_DOWNLOAD_URL')")
+
+#
+# Sometimes the companyName comes in with captial letters. This is
+# not allowed so we'll ensure everything is in lower case.
+#
+companyName=`echo $companyName | tr '[A-Z]' '[a-z]'` 
 
 #
 # Tell the ECC frontend about the account we want to create
@@ -48,7 +54,7 @@ export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$
 #     1) "Error" -- Says the account was already created, or some other error.
 #     2) ssh_exchange... -- Is probably because you aren't connected by VPN
 #
-ssh root@communitycloud.eucalyptus.com /root/ecc-admin-scripts/add-user-script \"$1\" \"$2\" \"$password\" \"$GENERATED_PREFIX\" 2>&1 | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
+ssh root@communitycloud.eucalyptus.com /root/ecc-admin-scripts/add-user-script \"$companyName\" \"$2\" \"$password\" \"$GENERATED_PREFIX\" 2>&1 | tee -a ./debug.out | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
 
 if [ $? = 0 ]; then
    echo
