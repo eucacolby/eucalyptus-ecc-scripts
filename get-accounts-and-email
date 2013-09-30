@@ -1,0 +1,6 @@
+#!/bin/bash
+for account in `euare-accountlist | cut -f1 -s`
+do
+   email=`euare-usergetinfo -k email -u admin --as-account $account | cut -f2 -s`
+   echo $account $email
+done
