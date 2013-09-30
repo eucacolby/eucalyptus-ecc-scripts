@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# This script will find all instances launched 2 days ago and
+# nuke 'em.
+#
+#
+for instance in `euca-describe-instances verbose | grep running | grep -v \`date --date='2 days ago' '+%Y-%m-%d'\`  | cut -f2`
+do
+  euca-terminate-instances $instance
+done

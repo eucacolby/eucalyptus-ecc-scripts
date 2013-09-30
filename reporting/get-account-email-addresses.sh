@@ -23,9 +23,9 @@ fi
 ## Save the results into a new file
 ##
 echo "Gathering email addresses...."
-for accountName in `cat test_account_list.txt`
+for accountName in `cat $1`
 do
-   adminEmail=`euare-usergetinfo -u admin --delegate $accountName | cut -f2`
+   adminEmail=`euare-usergetinfo -u admin --as-account $accountName | cut -f2`
    echo $accountName, $adminEmail >> $2
 done
 echo "Done"
