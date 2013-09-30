@@ -1,0 +1,7 @@
+#!/bin/bash
+while read item;
+do
+   account=`echo $item | cut -f1 -d\ `
+   email=`echo $item | cut -f2 -d\ `
+   ./ecc-create-account $account $email
+done < bulk-list-users.txt
