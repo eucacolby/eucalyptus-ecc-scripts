@@ -10,6 +10,6 @@ while read -r -u 3 item;
 do
    account=`echo $item | cut -f1 -d\ `
    email=`echo $item | cut -f2 -d\ `
-   echo ./ecc-create-account $account $email
-   /bin/bash ./ecc-create-account $account $email && continue
+   echo Creating account - $account $email
+   /bin/bash ./ecc-create-account $account $email
 done 3< bulk-list-users.txt
