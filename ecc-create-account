@@ -3,9 +3,9 @@
 #
 # Nominally check that we're given 3 arguments
 #
-if [ $# -ne 3 ]; then
+if [ $# -lt 2 ]; then
    echo  "Usage:"
-   echo  "$(basename $0) <account name> <email address> <password>"
+   echo  "$(basename $0) <account name> <email address> <optional-password>"
    echo
    exit 1
 fi
@@ -25,13 +25,28 @@ GENERATED_PREFIX=`echo $RANDOM_STRING | cut -c9-16`
 CRED_DOWNLOAD_URL=https://communitycloud.eucalyptus.com:8888/help/creds/$GENERATED_PREFIX$1.zip
 
 #
+# Use the password given when launching this script. Use the
+# generated password if one wasn't provided
+#
+if [ $3 ]; then
+   password=$3
+else
+   password=$GENERATED_PASSWORD
+fi
+
+#
 # Make sure all arguments are url encode. This is needed later on
 # when we post to the Marketo page
 #
-export companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
-export emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
-export password=$3
-export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$CRED_DOWNLOAD_URL')")
+companyName=$(python -c "import sys, urllib as ul; print ul.quote_plus('$1')")
+emailAddress=$(python -c "import sys, urllib as ul; print ul.quote_plus('$2')")
+downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$CRED_DOWNLOAD_URL')")
+
+#
+# Sometimes the companyName comes in with captial letters. This is
+# not allowed so we'll ensure everything is in lower case.
+#
+companyName=`echo $companyName | tr '[A-Z]' '[a-z]'` 
 
 #
 # Tell the ECC frontend about the account we want to create
@@ -39,7 +54,7 @@ export downloadURL=$(python -c "import sys, urllib as ul; print ul.quote_plus('$
 #     1) "Error" -- Says the account was already created, or some other error.
 #     2) ssh_exchange... -- Is probably because you aren't connected by VPN
 #
-ssh root@communitycloud.eucalyptus.com /root/ecc-admin-scripts/add-user-script \"$1\" \"$2\" \"$3\" \"$GENERATED_PREFIX\" 2>&1 | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
+ssh root@communitycloud.eucalyptus.com /root/ecc-admin-scripts/add-user-script \"$companyName\" \"$2\" \"$password\" \"$GENERATED_PREFIX\" 2>&1 | tee -a ./debug.out | egrep 'Error|ssh_exchange_identificationi|resolve hostname'
 
 if [ $? = 0 ]; then
    echo
@@ -55,6 +70,7 @@ dataString="mktForm_28=mktForm_28"
 dataString="$dataString&""ECC_Account_Name__c=$companyName"
 dataString="$dataString&""Email=$emailAddress"
 dataString="$dataString&""ECC_Credential_URL__c=$downloadURL"
+dataString="$dataString&""ECC_Password1__c=$password"
 dataString="$dataString&""ECC_Account_Created__c=Yes"
 dataString="$dataString&""mktFrmSubmit=Submit"
 dataString="$dataString&""lpId=3544"
