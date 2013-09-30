@@ -1,7 +1,15 @@
 #!/bin/bash
-while read item;
+#
+# Script intended to be run on authroized client machine.
+#
+# NOTE: while loop uses file descriptor 3 to avoid collision with the
+#       child's use of the default file descriptor.
+#       http://bit.ly/16QqgwK
+#
+while read -r -u 3 item;
 do
    account=`echo $item | cut -f1 -d\ `
    email=`echo $item | cut -f2 -d\ `
-   ./ecc-create-account $account $email
-done < bulk-list-users.txt
+   echo ./ecc-create-account $account $email
+   /bin/bash ./ecc-create-account $account $email && continue
+done 3< bulk-list-users.txt

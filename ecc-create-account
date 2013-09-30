@@ -88,7 +88,7 @@ dataString="$dataString&""_mkt_trk=id%3A729-HPK-685%26token%3A_mch-eucalyptus.co
 # Tell Marketo that you've created the account
 #
 echo
-echo Notifying user....
+echo Notifying account $companyName....
 echo
 curl --data "$dataString"  http://go.eucalyptus.com/index.php/leadCapture/save
 echo
